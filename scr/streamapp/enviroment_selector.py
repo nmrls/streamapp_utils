@@ -17,8 +17,10 @@ Usage:
     )
 """
 from streamlit import (
-    session_state, secrets, container, image, columns, selectbox, button
+    session_state, secrets, container, image, columns, selectbox,
+    button, sidebar
 )
+from typing import Literal
 from .utils import page_selector
 
 
@@ -50,7 +52,7 @@ class EnvironmentSelector:
             }
         }
 
-    def __init__(self) -> None:
+    def __init__(self, location: Literal['main', 'sidebar'] = 'main') -> None:
         """Initialization.
 
         Setting the first variable in toml file as default
@@ -62,11 +64,14 @@ class EnvironmentSelector:
         Return:
             None
         """
-        col1, col2 = container().columns([3, 1])
+        if location == 'sidebar':
+            col1, col2 = sidebar.container().columns([3, 1])
+        else:
+            col1, col2 = container().columns([3, 1])
         col1.selectbox(
             'Enviroment Select',
             self.environments.keys(),
-            key='EnvironmentSelect',
+            key='__EnvironmentSelect',
             placeholder='Select Enviroment',
             on_change=self.change_enviroment,
             label_visibility='collapsed',
@@ -93,7 +98,7 @@ class EnvironmentSelector:
             None
         """
         session_state.environment = session_state.get(
-            'EnvironmentSelect'
+            '__EnvironmentSelect'
         )
         session_state.environment_url = cls.environments.get(
             session_state.environment

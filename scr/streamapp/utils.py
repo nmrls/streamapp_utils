@@ -4,6 +4,7 @@ Functions to interact and solve common and repetitive procedures
 during the streamlit sessions state development and other scenarios.
 """
 from typing import Optional, Any
+from typing_extensions import deprecated
 
 
 def get_vars(session, prefix: Optional[str] = None, *args: str
@@ -28,6 +29,7 @@ def get_vars(session, prefix: Optional[str] = None, *args: str
     return vars
 
 
+@deprecated('Use SubPages form streamapp instead')
 def page_selector(session, page_key: str, page_options: dict) -> None:
     from streamlit import markdown
     page = page_options.get(
@@ -77,6 +79,9 @@ def get_chunks(data: list, chunk_size: int = 1) -> list[list]:
 
 
 class Classproperty(object):
+    """Class to define class properties similar to
+    @property decorator for objects.
+    """
     def __init__(self, func) -> None:
         self.func = func
 

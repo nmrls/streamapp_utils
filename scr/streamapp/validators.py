@@ -35,6 +35,9 @@ class BaseValidator:
     conn: SnowConnection
     query_base = """
         SELECT
+            {% if distinct %}
+                DISTINCT
+            {% endif %}
             {% for column in columns %}
                  {{'' if loop. first else ', '}}{{column}}
             {% endfor %}
@@ -57,7 +60,9 @@ class BaseValidator:
     def query(cls, table: str, columns: list[str] = ['*'],
               where: Optional[list[str]] = None,
               group_by: Optional[list[int | str]] = None,
-              succes_confirmation: bool = False) -> DataFrame:
+              succes_confirmation: bool = False, distinct: bool = False,
+              compare_columns: bool = False
+              ) -> DataFrame:
         """Parse and perform query
 
         Args:
@@ -66,6 +71,8 @@ class BaseValidator:
             where: conditions list to query
             group_by: list of columns to group
             succes_confirmation: bool to call a success toast
+            distinct: include distinct clause in query
+            compare_columns: if error return an empty df with the right columns
 
         Returns:
             a DataFrame object to perform validations
@@ -76,9 +83,14 @@ class BaseValidator:
                 'columns': columns,
                 'table': table,
                 'where': where,
-                'group_by': group_by
+                'group_by': group_by,
+                'distinct': distinct
             },
             template=False,
             succes_confirmation=succes_confirmation
         )
+        if compare_columns:
+            clean_columns = list(map(lambda x: x.split()[-1], columns))
+            if set(result.columns).difference(clean_columns):
+                result = DataFrame(columns=clean_columns)
         return result
