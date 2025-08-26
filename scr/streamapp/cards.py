@@ -20,13 +20,13 @@ class Card:
         <a style="text-decoration: none;" href="{url}" target="_blank">
         <img src="{img}"
             style="height: 100%; width: 100%; border-radius: 30px; \
-                transition: .5s; opacity: 0.3;">
+                transition: .5s; opacity: {opacity};">
         <div style="position: absolute; top: 50%; left: 50%; transform: \
             translate(-50%, -50%);">
-            <h1 style="color: white; font-size: 2.5rem; font-family: \
-                sans-serif">{title}</h1>
-            <p style="color: white; font-size: 1.2rem; font-family: \
-                sans-serif; font-weight:bold;">{description}</p>
+            <h1 style="color: {color_title}; font-size: {fontsize}rem; \
+                font-family: sans-serif">{title}</h1>
+            <p style="color: {color_p}; font-size: {fontsize_p}rem; \
+                font-family: sans-serif; font-weight:bold;">{description}</p>
         </div>
         </a>
         </div>
@@ -34,7 +34,9 @@ class Card:
 
     @classmethod
     def add_card(cls, url: str, title: str, img: str, description: str = '',
-                 width: int = 400, height: int = 400) -> None:
+                 width: int = 400, height: int = 400, opacity: float = 0.9,
+                 fontsize: float = 2.5, fontsize_p: float = 1.2,
+                 color_title: str = 'white', color_p: str = 'white') -> None:
         """Show a rendered html card in frontend.
 
         Args:
@@ -44,6 +46,11 @@ class Card:
             description: optional description to explain something in the card.
             width: int card`s width.
             heigth: int card`s heigth.
+            opacity: opacity between 0-1 to apply in the image
+            fontsize: title font size in rem
+            fontsize_p: description font size in rem
+            color_title: title font color
+            color_p: description font color
 
         Return:
             None
@@ -55,7 +62,12 @@ class Card:
                 img=img,
                 description=description,
                 width=width*.97,
-                height=height*.97
+                height=height*.97,
+                opacity=opacity,
+                fontsize=fontsize,
+                fontsize_p=fontsize_p,
+                color_title=color_title,
+                color_p=color_p
             ),
             width=width,
             height=height
