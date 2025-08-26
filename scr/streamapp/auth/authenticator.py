@@ -127,8 +127,13 @@ class Auth(UserControlUi):
                     location='main',
                     max_login_attempts=3
                 )
-                if self.conn is None and status:
-                    session_state['roles'] = session_state.authenticator\
+                session_state['roles'] = session_state.authenticator\
+                    .authentication_handler\
+                    .credentials['usernames']\
+                    .get(username, dict())\
+                    .get('roles', [])
+                if self.conn is not None and status:
+                    session_state['profile_img'] = session_state.authenticator\
                         .authentication_handler\
                         .credentials['usernames']\
                         .get(username, dict())\

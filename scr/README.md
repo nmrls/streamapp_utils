@@ -18,9 +18,12 @@ streamlit-authenticator==0.2.2
 snowflake-connector-python>=3.0.4
 openpyxl==3.1.2
 pydantic>=2.5.3
+pymongo==4.6.3
+twine>=4.0.2
 ```
 
 # Secrets file
+Create a in ./.streamlit folder a secrets.toml file for app configuration
 ```
 # environment variables
 key = streamlit cookies key for auth module
@@ -70,6 +73,22 @@ name.url = 'https://pokeapi.co'  # host url for request with different environme
 [REQUESTS]
 get_pockemon.url = '/api/v2/berry/'
 get_pockemon.method = 'get'
+```
+
+# Config file
+Create a in ./.streamlit folder a config.yaml file for user credentials and cookkie management, see streamlit authenticator documentation
+*Users only if you are using local credentials instead of mongo credentials*
+```
+credentials:
+  usernames:
+    Pepe:
+      name: 'pepe@mail.com'
+      roles: ['admin', 'user', 'service']
+      password: '$2b$12$6E4nrCcqAheeU9OE3zSQWeJjpEiJ6HL1AdXgo5vmE1yJ9z1XnqLq'
+cookie:
+  name: 'my_cookie_name'
+  key: 'INTJB0EvLz1PzeEVp...'
+  expiry_days: 1
 ```
 
 ### Generate Passwords
