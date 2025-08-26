@@ -10,7 +10,7 @@ Usage:
     mongo_conn.get_users()
 """
 
-from streamlit import secrets
+from streamlit import secrets, toast
 from streamlit.connections import BaseConnection
 from pymongo import MongoClient, ReturnDocument
 from pymongo.errors import ServerSelectionTimeoutError
@@ -32,6 +32,10 @@ class MongoAuth(BaseConnection):
         username = 'root'
         password = 'example'
 
+        [mongo_conf]
+        database = 'credentials_test'
+        collection = 'users'
+
         `to define cookies`
         [auth_cookie]
         cookie_name = 'cookie'
@@ -52,22 +56,49 @@ class MongoAuth(BaseConnection):
         """
         try:
             client = MongoClient(**secrets['mongo_auth'])
-            database = client.credentials
-            self.collection = database.users
+            self.__check_database(client)
             self.__check_collection()
-            info(f'connected to database: {database}')
-            info(f'connected to collection: {self.collection.name}')
             return self.collection
-        except ServerSelectionTimeoutError:
-            if secrets.get('dev'):
-                warning('Invalid Mongo Auth module credentials')
+        except (ServerSelectionTimeoutError, KeyError):
+            warning('Invalid Mongo Auth module credentials')
             self.collection = None
             return
+
+    def __check_database(self, client: MongoClient) -> None:
+        """Check if database and collection are defined in secrets.
+
+        Create the database and collection if not defined in secrets.
+
+        Args:
+            None
+
+        Return:
+            None
+        """
+        try:
+            if secrets.get('mongo_conf'):
+                database = client.get_database(
+                    secrets['mongo_conf'].get('database')
+                )
+                self.collection = database.get_collection(
+                    secrets['mongo_conf'].get('collection')
+                )
+            else:
+                database = client.credentials
+                self.collection = database.users
+        except Exception:
+            info('Database and collection created by default')
+            database = client.credentials
+            self.collection = database.users
+        finally:
+            info(f'connected to database: {database}')
+            info(f'connected to collection: {self.collection.name}')
+        return
 
     def __check_collection(self) -> None:
         """Check if collection for users exists.
 
-        Create the collection if does not exists, tieh user: admin and
+        Create the collection if does not exists, with user: admin and
         password: admin
 
         Args:
@@ -120,6 +151,10 @@ class MongoAuth(BaseConnection):
         user = self.get_user(name=name)
         if user is not None:
             return user
+        user = self.__get_user_name(username=username)
+        if user is not None:
+            toast('Username already in use', icon='🚫')
+            return user
         user = self.collection.insert_one(
             {
                 'username': username,
@@ -149,7 +184,7 @@ class MongoAuth(BaseConnection):
         """Get specifict user info
 
         Args:
-            name: name for the user to be retived
+            name: name for the user to be retrived
 
         Return:
             Dict with user information or empty
@@ -157,6 +192,23 @@ class MongoAuth(BaseConnection):
         user = self.collection.find_one(
             {
                 'name': name
+            }
+        )
+        return user
+
+    @error_handler
+    def __get_user_name(self, username: str) -> dict:
+        """Get specifict user info
+
+        Args:
+            username: username for the user to be retrived
+
+        Return:
+            Dict with user information or empty
+        """
+        user = self.collection.find_one(
+            {
+                'username': username
             }
         )
         return user
@@ -189,6 +241,10 @@ class MongoAuth(BaseConnection):
         Return:
             Dict with user information updated
         """
+        user = self.__get_user_name(username=new_username)
+        if user is not None:
+            toast('Username already in use', icon='🚫')
+            return self.get_user(name=name)
         user = self.collection.find_one_and_update(
             {
                 'name': name

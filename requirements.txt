@@ -50,7 +50,6 @@ six==1.16.0
 smmap==5.0.1
 snowflake-connector-python==3.7.1
 sortedcontainers==2.4.0
-streamapp==0.0.14
 streamlit==1.33.0
 streamlit-authenticator==0.3.2
 tenacity==8.2.3

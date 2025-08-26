@@ -88,43 +88,49 @@ class BaseRequest:
 
     @classmethod
     def __send_json(cls, body: ModelMetaclass, url: str,
-                    request_type: str) -> object:
+                    request_type: str,
+                    headers: dict = {}) -> object:
         """Send a json body request.
 
         Args:
             body: a json type body for the request
             url: the url to send the request
             request_type: name of request variable in .secrects
+            headers: headers to include in request
 
         Returns
             The request reponse object
         """
         response = cls.methods.get(cls.__method(request_type), 'get')(
             url=url,
-            headers=cls.headers,
+            headers=cls.headers | headers,
             data=dumps(body.model_dump(mode='json'), ensure_ascii=True)
         )
         return response
 
     @classmethod
-    def __send_url(cls, url: str, request_type: str) -> object:
+    def __send_url(cls, url: str, request_type: str,
+                   headers: Optional[dict] = None) -> object:
         """Send a simple url request.
 
         Args:
             url: the url to send the request
             request_type: name of request variable in .secrects
+            headers: headers to include in request
+
 
         Returns
             The request reponse object
         """
         response = cls.methods.get(cls.__method(request_type), 'get')(
-            url=url
+            url=url,
+            headers=headers
         )
         return response
 
     def send(self, request_type: str, body: Optional[dict] = None,
              include_in_url: str = '', is_json: bool = False,
-             message: str = '') -> list | dict:
+             message: str = '', headers: dict = {}) -> list | dict:
         """Send a request.
 
         Args:
@@ -133,6 +139,7 @@ class BaseRequest:
             include_in_url: str to inclde as url parameter
             is_json: send a json body request
             message: message to return in a toast
+            headers: headers to include in request
 
         Returns
             The request's response loaded from json schema.
@@ -143,12 +150,14 @@ class BaseRequest:
                 response = self.__send_json(
                     body=body,
                     request_type=request_type,
-                    url=url
+                    url=url,
+                    headers=headers
                 )
             else:
                 response = self.__send_url(
                     request_type=request_type,
-                    url=url
+                    url=url,
+                    headers=headers
                 )
         except MissingSchema:
             toast('Invalid host', icon='❌')
@@ -172,7 +181,8 @@ class BaseRequest:
     def send_multiple(self, request_type: str,
                       include_in_url: list[str] = [''],
                       bodies: list[Optional[dict]] = [None],
-                      is_json: bool = False) -> list:
+                      is_json: bool = False,
+                      headers: dict = {}) -> list:
         """Send multiple request.
 
         Args:
@@ -207,7 +217,8 @@ class BaseRequest:
                     body=request[0],
                     include_in_url=request[1],
                     is_json=is_json,
-                    message=str(n)
+                    message=str(n),
+                    headers=headers
                 )
             )
         return responses

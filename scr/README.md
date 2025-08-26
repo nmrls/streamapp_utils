@@ -54,6 +54,10 @@ port = 27017
 username = 'root'
 password = 'example'
 
+[mongo_conf]  # Optional if you prefer set up an specific database and collection
+database = 'credentials_test'  # Mongo database name, default credentials
+collection = 'users_test'  # Mongo database collection, default users
+
 [auth_cookie]
 cookie_name = 'cookie'
 cookie_key = 'INTJB0EvLz1PzeEVp...'

@@ -5,7 +5,7 @@ with open('scr/README.md', 'r') as f:
 
 setup(
     name='streamapp',
-    version='0.0.12',
+    version='0.0.13',
     author='nmrls',
     description='Base modules to use in a Streamlit basic project',
     long_description=long_description,

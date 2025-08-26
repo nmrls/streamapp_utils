@@ -4,7 +4,7 @@ Functions to interact and solve common and repetitive procedures
 during the streamlit sessions state development and other scenarios.
 """
 from typing import Optional, Any
-from warnings import deprecated
+from typing_extensions import deprecated
 
 
 def get_vars(session, prefix: Optional[str] = None, *args: str
@@ -29,7 +29,7 @@ def get_vars(session, prefix: Optional[str] = None, *args: str
     return vars
 
 
-@deprecated('User SubPages form streamapp instead')
+@deprecated('Use SubPages form streamapp instead')
 def page_selector(session, page_key: str, page_options: dict) -> None:
     from streamlit import markdown
     page = page_options.get(

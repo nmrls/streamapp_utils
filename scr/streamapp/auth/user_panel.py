@@ -22,6 +22,8 @@ Usage:
 import streamlit as st
 from streamlit.runtime.media_file_storage import MediaFileStorageError
 from streamlit_authenticator.utilities.hasher import Hasher
+from PIL import Image, ImageDraw, UnidentifiedImageError
+from io import BytesIO
 
 
 class UserControlUi:
@@ -54,15 +56,34 @@ class UserControlUi:
             'Update Photo'
         ])
         with info:
-            ma, ph = st.columns([2, 1])
+            _, ma, _ = st.container(border=True).columns([1, 4, 1])
+            _, img_col, _ = ma.columns(3)
             ma.title(st.session_state.username)
-            ma.markdown('📧 ' + st.session_state.name)
+            ma.code('📧 ' + st.session_state.name)
             try:
-                ph.divider()
-                ph.image(st.session_state.profile_img)
-            except (MediaFileStorageError, AttributeError):
-                ph.info('Consider to load a profile photo')
-            ma.code(st.session_state.roles)
+                ma.divider()
+                ims = Image.open(BytesIO(st.session_state.profile_img))
+                mask = Image.new("L", ims.size, 0)
+                draw = ImageDraw.Draw(mask)
+                draw.ellipse(
+                    (4, 4, ims.size[0] - 4, ims.size[1] - 4),
+                    fill=255
+                )
+                img_col.image(
+                    Image.composite(
+                        ims,
+                        Image.new(ims.mode, ims.size, (255, 255, 255)),
+                        mask
+                    ),
+                    use_container_width=True
+                )
+            except (MediaFileStorageError, AttributeError,
+                    TypeError, UnidentifiedImageError):
+                ma.info('Consider to load a profile photo')
+            ma.dataframe(
+                {'Roles': [st.session_state.roles]},
+                use_container_width=True
+            )
 
         with name:
             _, ma, _ = st.columns([1, 3, 1])
@@ -107,10 +128,13 @@ class UserControlUi:
             )
             photo_bt = ft.form_submit_button('Change Photo')
             if photo_bt:
-                self.conn.update_picture(
-                    st.session_state.name,
-                    auth_new_photo.getvalue()
-                )
+                try:
+                    self.conn.update_picture(
+                        st.session_state.name,
+                        auth_new_photo.getvalue()
+                    )
+                except AttributeError:
+                    st.error('Load a Photo')
                 return True
         return False
 
@@ -131,10 +155,12 @@ class UserControlUi:
             UI streamlit interface page and
             bool: False if there no chnges, True if a change was performed
         """
+        if 'admin' not in st.session_state.roles:
+            return
         st.subheader('Admin panel')
         reset_pw, new_user, new_role, revoke_role, delete_user, us = st.tabs([
             'Reset User Password',
-            'Crete user',
+            'Create user',
             'Grand roles',
             'Revoke roles',
             'Delete user',
@@ -193,7 +219,7 @@ class UserControlUi:
             auth_create_img = ft.file_uploader(
                 'Profile Photo',
                 type=['jpg', 'png', 'jpeg'],
-                accept_multiple_files=False
+                accept_multiple_files=False,
             )
             create_user_bt = ft.form_submit_button('Create user')
             if create_user_bt:
@@ -202,7 +228,8 @@ class UserControlUi:
                     name=auth_create_email,
                     password=auth_create_password,
                     roles=auth_create_roles,
-                    img=auth_create_img.getvalue(),
+                    img=(auth_create_img.getvalue()
+                         if auth_create_img else b'')
                 )
                 return True
 

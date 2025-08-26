@@ -17,6 +17,7 @@ from streamlit import (
     sidebar, caption, toast, rerun
 )
 from streamlit_authenticator import Authenticate, LoginError
+from logging import info as log_info
 from yaml.loader import SafeLoader
 from yaml import load
 from typing import Optional, Callable
@@ -52,6 +53,7 @@ class Auth(UserControlUi):
             if secrets.get('mongo_auth'):
                 self.conn = connection('auth', MongoAuth)
                 self._update_mongo_credentials()
+                log_info('Logging with Mongo DB')
             else:
                 self.conn = None
                 with open('.streamlit/config.yaml') as file:
@@ -63,6 +65,7 @@ class Auth(UserControlUi):
                     cookie_key=__credentials['cookie']['key'],
                     cookie_expiry_days=__credentials['cookie']['expiry_days']
                 )
+                log_info('Logging with Config file')
         except (TypeError, FileNotFoundError):
             error('Invalid App credentials')
             stop()
@@ -130,10 +133,15 @@ class Auth(UserControlUi):
                         .credentials['usernames']\
                         .get(username, dict())\
                         .get('roles', [])
+                    session_state['profile_img'] = session_state.authenticator\
+                        .authentication_handler\
+                        .credentials['usernames']\
+                        .get(username, dict())\
+                        .get('img', b'')
                 elif status:
                     user = self.conn.get_user(name)
                     session_state.roles = user.get('roles', [])
-                    session_state.profile_img = user.get('img', '')
+                    session_state.profile_img = user.get('img', b'')
                     del user
                 del name, status, username
             except KeyError:
@@ -159,9 +167,8 @@ class Auth(UserControlUi):
             elif session_state.authentication_status is None:
                 warning('Please enter your username and password')
                 stop()
-        except (AttributeError, KeyError) as e:
+        except (AttributeError, KeyError):
             session_state.authentication_status = None
-            print('Atribute-KeyError error', e)
         return
 
     def logout(self, side_bar_widget: Callable = None) -> None:
